@@ -20,7 +20,7 @@ public class DeviceListAdapter extends ArrayAdapter<BluetoothDevice> {
     private ArrayList<BluetoothDevice> mDevices;
     private int  mViewResourceId;
 
-    DeviceListAdapter(Context context, int tvResourceId, ArrayList<BluetoothDevice> devices){
+    public DeviceListAdapter(Context context, int tvResourceId, ArrayList<BluetoothDevice> devices){
         super(context, tvResourceId,devices);
         this.mDevices = devices;
         mLayoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -42,12 +42,10 @@ public class DeviceListAdapter extends ArrayAdapter<BluetoothDevice> {
                 deviceName.setText(device.getName() != null ? device.getName() : "(No Name)");
                 deviceName.setTypeface(null, Typeface.BOLD);
                 deviceName.setTextColor(Color.BLACK);
-
             }
             if (deviceAdress != null) {
                 deviceAdress.setText(device.getAddress());
                 deviceAdress.setTextColor(Color.BLACK);
-
             }
         }
 

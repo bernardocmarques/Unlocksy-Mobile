@@ -41,9 +41,32 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter bAdapter = BluetoothAdapter.getDefaultAdapter();
     ArrayList<BluetoothDevice> devices = new ArrayList<>();
     private Button btnSearch;
-    private final String TAG = "myTag";
+    private static final String TAG = "myTag";
 
+    // Create a BroadcastReceiver for ACTION_STATE_CHANGED.
+    private final BroadcastReceiver broadcastReceiver1 = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(bAdapter.ACTION_STATE_CHANGED)) {
+                final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, bAdapter.ERROR);
 
+                switch (state){
+                    case BluetoothAdapter.STATE_OFF:
+                        Log.d(TAG, "onReceive: STATE OFF");
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_OFF:
+                        Log.d(TAG, "broadcastReceiver1: STATE TURNING OFF");
+                        break;
+                    case BluetoothAdapter.STATE_ON:
+                        Log.d(TAG, "broadcastReceiver1: STATE ON");
+                        break;
+                    case BluetoothAdapter.STATE_TURNING_ON:
+                        Log.d(TAG, "broadcastReceiver1: STATE TURNING ON");
+                        break;
+                }
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +98,14 @@ public class MainActivity extends AppCompatActivity {
 
         if (bAdapter == null) {
             Toast.makeText(getApplicationContext(), "Bluetooth Not Supported", Toast.LENGTH_SHORT).show();
+
+        } else if (!bAdapter.isEnabled()){
+            Intent enableBTIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivity(enableBTIntent);
+
+            IntentFilter BTIntent = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+            registerReceiver(broadcastReceiver1, BTIntent);
+
         } else {
 
 
@@ -129,10 +160,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        Log.d(TAG, "onDestroy: called.");
         super.onDestroy();
 
-        // Don't forget to unregister the ACTION_FOUND receiver.
+        // Don't forget to unregister the receivers.
         unregisterReceiver(receiver);
+        unregisterReceiver(broadcastReceiver1);
     }
 
 
@@ -235,7 +268,9 @@ public class MainActivity extends AppCompatActivity {
 
 
             // Cancel discovery because it otherwise slows down the connection.
-            bAdapter.cancelDiscovery();
+            if(bAdapter.isDiscovering()) {
+                bAdapter.cancelDiscovery();
+            }
 
             try {
                 // Connect to the remote device through the socket. This call blocks

@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">sirs_mobile</string>
+    <string name="search">Search</string>
+    <string name="get_paired">Get Paired</string>
+</resources>

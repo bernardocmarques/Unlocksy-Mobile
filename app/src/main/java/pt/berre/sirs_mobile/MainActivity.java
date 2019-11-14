@@ -127,28 +127,6 @@ public class MainActivity extends AppCompatActivity {
 
         checkLocationPermission();
 
-        lstvw.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                bAdapter.cancelDiscovery();
-
-                Log.d(TAG, "OnItemClicked: A device was clicked.");
-                String deviceName = devices.get(position).getName();
-                String deviceAddress = devices.get(position).getAddress();
-
-                Log.d(TAG, "OnItemClicked: deviceName = " + deviceName);
-                Log.d(TAG, "OnItemClicked: deviceAddress = " + deviceAddress);
-
-                //create the bond
-                Log.d(TAG, "Trying to pair with " + deviceName);
-                devices.get(position).createBond();
-            }
-        });
-
-        // Broadcasts when bond state changes (ie:pairing)
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-        registerReceiver(broadcastReceiver3, filter);
-
 
         if (bAdapter == null) {
             Toast.makeText(getApplicationContext(), "Bluetooth Not Supported", Toast.LENGTH_SHORT).show();
@@ -205,6 +183,29 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
+
+
+            // Broadcasts when bond state changes (ie:pairing)
+            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+            registerReceiver(broadcastReceiver3, filter);
+
+            lstvw.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    bAdapter.cancelDiscovery();
+
+                    Log.d(TAG, "OnItemClicked: A device was clicked.");
+                    String deviceName = devices.get(position).getName();
+                    String deviceAddress = devices.get(position).getAddress();
+
+                    Log.d(TAG, "OnItemClicked: deviceName = " + deviceName);
+                    Log.d(TAG, "OnItemClicked: deviceAddress = " + deviceAddress);
+
+                    //create the bond
+                    Log.d(TAG, "Trying to pair with " + deviceName);
+                    devices.get(position).createBond();
+                }
+            });
         }
     }
 
@@ -249,29 +250,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-    //@Override
-    //public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-    //    switch (requestCode) {
-    //        case MY_PERMISSIONS_REQUEST_LOCATION: {
-    //            // If request is cancelled, the result arrays are empty.
-    //            if (grantResults.length > 0
-    //                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//
-    //                // permission was granted, yay! Do the
-    //                // location-related task you need to do.
-    //                ContextCompat.checkSelfPermission(this,
-    //                        Manifest.permission.ACCESS_FINE_LOCATION);
-//
-    //            } else {
-    //                Log.d("myTag", "No Location---------");
-//
-//
-    //            }
-    //        }
-//
-    //    }
-    //}
 
     //private class ConnectThread extends Thread {
     //    private final BluetoothSocket mmSocket;

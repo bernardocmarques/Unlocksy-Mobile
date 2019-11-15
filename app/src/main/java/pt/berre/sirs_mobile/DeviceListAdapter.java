@@ -35,17 +35,25 @@ public class DeviceListAdapter extends ArrayAdapter<BluetoothDevice> {
         BluetoothDevice device = mDevices.get(position);
 
         if (device != null) {
-            TextView deviceName = (TextView) convertView.findViewById(R.id.tvDeviceName);
-            TextView deviceAddress = (TextView) convertView.findViewById(R.id.tvDeviceAddress);
+            TextView deviceName = (TextView) convertView.findViewById(R.id.deviceName);
+            TextView deviceAddress = (TextView) convertView.findViewById(R.id.deviceAddress);
+            TextView deviceBondStatus = (TextView) convertView.findViewById(R.id.bondStatus);
 
             if (deviceName != null) {
                 deviceName.setText(device.getName() != null ? device.getName() : "(No Name)");
-                deviceName.setTypeface(null, Typeface.BOLD);
-                deviceName.setTextColor(Color.BLACK);
             }
             if (deviceAddress != null) {
                 deviceAddress.setText(device.getAddress());
-                deviceAddress.setTextColor(Color.BLACK);
+            }
+            if (deviceBondStatus != null) {
+
+                if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+                    deviceBondStatus.setText("Paired");
+                    deviceBondStatus.setTextColor(Color.GREEN);
+                } else if (device.getBondState() == BluetoothDevice.BOND_NONE) {
+                    deviceBondStatus.setText("Not Paired");
+                    deviceBondStatus.setTextColor(Color.RED);
+                }
             }
         }
 

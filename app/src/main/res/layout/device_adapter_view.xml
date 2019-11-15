@@ -7,14 +7,34 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/tvDeviceName"
-        android:textSize="15sp"/>
+        android:id="@+id/deviceName"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:layout_marginEnd="20sp"
+        android:layout_marginStart="20sp"
+        android:textColor="@android:color/black"/>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/tvDeviceAddress"
-        android:textSize="15sp"/>
+        android:id="@+id/deviceAddress"
+        android:textSize="15sp"
+        android:layout_marginEnd="20sp"
+        android:layout_marginStart="20sp"
+        android:textColor="@android:color/black"/>
+
+
+    <TextView
+        android:id="@+id/bondStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="-20sp"
+        android:layout_marginEnd="20sp"
+        android:layout_marginStart="20sp"
+        android:textColor="@android:color/holo_green_dark"
+        android:textAlignment="textEnd"
+
+        android:textSize="15sp" />
 
 
 </LinearLayout>

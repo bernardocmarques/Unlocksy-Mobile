@@ -2,4 +2,8 @@
     <string name="app_name">sirs_mobile</string>
     <string name="search">Search</string>
     <string name="get_paired">Get Paired</string>
+    <string name="channel_name">notificationChannel1</string>
+    <string name="channel_description">notificationChannel1Description</string>
+    <string name="qrCodeBtn">Connect QR Code</string>
+    <string name="manualConnectBtn">Connect Manually</string>
 </resources>

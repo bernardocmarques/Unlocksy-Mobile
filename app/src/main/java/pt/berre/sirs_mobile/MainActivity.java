@@ -2,6 +2,7 @@ package pt.berre.sirs_mobile;
 
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.DialogInterface;
@@ -16,6 +17,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
+
+import com.google.android.gms.vision.barcode.Barcode;
+import com.notbytes.barcode_reader.BarcodeReaderActivity;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -23,6 +28,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "myTagMain";
     static final String CHANNEL_ID = "NC1";
+    private static final int BARCODE_READER_ACTIVITY_REQUEST = 1208;
+
 
 
     @Override
@@ -41,6 +48,34 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.btnQRCode).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent launchIntent = BarcodeReaderActivity.getLaunchIntent(MainActivity.this, true, false);
+                startActivityForResult(launchIntent, BARCODE_READER_ACTIVITY_REQUEST);
+            }
+        });
+
+
+
+
+
+    }
+
+    @Override
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode != Activity.RESULT_OK) {
+            Toast.makeText(this, "error in  scanning", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (requestCode == BARCODE_READER_ACTIVITY_REQUEST && data != null) {
+            Barcode barcode = data.getParcelableExtra(BarcodeReaderActivity.KEY_CAPTURED_BARCODE);
+            Toast.makeText(this, barcode.rawValue, Toast.LENGTH_SHORT).show();
+        }
 
     }
 

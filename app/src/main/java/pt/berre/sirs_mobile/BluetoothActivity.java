@@ -10,25 +10,29 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
-import java.util.Set;
-import java.util.UUID;
 
-public class BluetoothActivity extends AppCompatActivity {
+public class BluetoothActivity extends AppCompatActivity implements BluetoothInterface {
 
     private BluetoothAdapter bAdapter = BluetoothAdapter.getDefaultAdapter();
     private Button btnSend;
     private Button btnDisconnect;
+    private EditText sendBox;
+    private TextView outputBox;
+    private TextView connectionInfo;
+
     private static final String TAG = "myTag";
+
+    private BluetoothSocket socket;
+    private BluetoothDevice device;
 
 
 
@@ -39,13 +43,13 @@ public class BluetoothActivity extends AppCompatActivity {
 
         btnSend = findViewById(R.id.btnSend);
         btnDisconnect = findViewById(R.id.btnDisconnect);
-
-        TextView connectionInfo = findViewById(R.id.connectedInfo);
+        sendBox = findViewById(R.id.sendBox);
+        outputBox = findViewById(R.id.outputBox);
+        connectionInfo = findViewById(R.id.connectedInfo);
 
         // Main Code
         if (bAdapter == null) {
             Toast.makeText(getApplicationContext(), "Bluetooth Not Supported", Toast.LENGTH_SHORT).show();
-
         } else {
             if (!bAdapter.isEnabled()) {
                 Intent enableBTIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -56,41 +60,51 @@ public class BluetoothActivity extends AppCompatActivity {
             }
 
 
-
-            // Broadcasts when bond state changes (ie:pairing)
-            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-            registerReceiver(broadcastReceiverBondStatus, filter);
-
-
-
-            BluetoothDevice device = getIntent().getParcelableExtra("DEVICE");
+            device = getIntent().getParcelableExtra("DEVICE");
             String deviceName = device.getName();
-            String deviceAddress = device.getAddress();
-
-
-            connectionInfo.setText(String.format("Connecting to: %s...", deviceName));
 
             if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
                 //create the bond
                 Log.d(TAG, "Trying to pair with " + deviceName);
                 device.createBond();
+                Log.d(TAG, "Bonded to " + deviceName);
+
+            }
+            connect();
+        }
+
+
+        btnSend.setOnClickListener(v -> {
+            String textToSend = sendBox.getText().toString();
+
+            if (socket == null || !socket.isConnected()) {
+                outputBox.append("Error sending text! Socket not connected!");
+                return;
             }
 
-            Log.d(TAG, "Connecting " + deviceName);
-            BluetoothSocket socket = createSocket(device);
-            Log.d(TAG, "Socket Created");
+            if (!textToSend.equals("")) {
+                if (sendStringThroughSocket(socket, textToSend)){
+                    outputBox.append(String.format("Me: %s\n", textToSend));
+                } else {
+                    outputBox.append("Error sending text!");
+                }
+            }
 
-            connectionInfo.setText(String.format("Connected to: %s", deviceName));
+            sendBox.setText("");
+        });
 
-//
-//            sendStringThroughSocket(socket, "Sup");
-//            showNotification("Recivied:", readStringFromSocket(socket));
-//            closeSocketConnection(socket);
-//            Log.d(TAG, "here");
+        btnDisconnect.setOnClickListener(view -> {
 
-
-        }
+            if (socket == null || !socket.isConnected()) {
+                connect();
+            } else {
+                disconnect();
+            }
+        });
     }
+
+
+
 
 
     //    ----------------------------------------------------------------------
@@ -124,98 +138,71 @@ public class BluetoothActivity extends AppCompatActivity {
     };
 
 
-
-    // Broadcast receiver that detects bond state changes (pairing status changes)
-    private final BroadcastReceiver broadcastReceiverBondStatus = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            assert action != null;
-            if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-
-                //3cases
-                //case 1: bonded already
-                if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_BONDED.");
-                }
-
-                //case 2: creating a bond
-                if (device.getBondState() == BluetoothDevice.BOND_BONDING) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_BONDING.");
-
-                }
-
-                //case 3: breaking a bond
-                if (device.getBondState() == BluetoothDevice.BOND_NONE) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_NONE.");
-
-                }
-            }
-        }
-    };
-
-
-
     //    ----------------------------------------------------------------------
     //    ------------------------ Bluetooth Functions -------------------------
     //    ----------------------------------------------------------------------
 
 
-    //Creates Bluetooth Socket and connects to it. Returns socket if successful or null otherwise.
-    BluetoothSocket createSocket(BluetoothDevice device) {
-        BluetoothSocket socket;
-        try {
-            // Get a BluetoothSocket to connect with the given BluetoothDevice.
-            // MY_UUID is the app's UUID string, also used in the server code.
-            socket = device.createRfcommSocketToServiceRecord(UUID.fromString("fa87c0d0-afac-11de-8a39-0800200c9a66")); //FIXME change this is prob wrong
-        } catch (IOException e) {
-            Log.e(TAG, "Socket's create() method failed", e);
-            return null;
-        }
-
-        try {
-            socket.connect();
-            Log.d(TAG, "Connected to " + socket.getRemoteDevice().getName());
-            Toast.makeText(getApplicationContext(), "Connected to " + socket.getRemoteDevice().getName(), Toast.LENGTH_SHORT).show();
-            return socket;
-        } catch (IOException connectException) {
-            Toast.makeText(getApplicationContext(), "Error connecting to " + socket.getRemoteDevice().getName(), Toast.LENGTH_SHORT).show();
-            Log.e(TAG, "Error connecting to " + socket.getRemoteDevice().getName(), connectException);
-            try {
-                socket.close();
-            } catch (IOException closeException) {
-                Log.e(TAG, "Could not close the client socket", closeException);
-            }
-            return null;
-        }
-    }
-
-    void closeSocketConnection(BluetoothSocket socket) {
+    boolean closeSocketConnection(BluetoothSocket socket) {
         try {
             socket.close();
+            return true;
         } catch (IOException e) {
             Log.e(TAG, "Could not close the client socket", e);
+            return false;
         }
     }
 
-    void sendStringThroughSocket(BluetoothSocket socket, String string) {
+    boolean sendStringThroughSocket(BluetoothSocket socket, String string) {
         try {
             socket.getOutputStream().write(string.getBytes());
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
     }
 
-    String readStringFromSocket(BluetoothSocket socket) {
-        byte[] mmBuffer = new byte[1024];
-        try {
-            int size = socket.getInputStream().read(mmBuffer);
-            return new String(mmBuffer, 0, size);
-        } catch (IOException e) {
-            e.printStackTrace();
+    @SuppressLint("SetTextI18n")
+    @Override
+    public void connectionHandler(BluetoothSocket s) {
+        this.socket = s;
+        if (s==null) {
+            outputBox.append("Error connecting to device!");
+            connectionInfo.setText(String.format("Not connected to: %s...", device.getName()));
+        } else {
+            connectionInfo.setText(String.format("Connected to: %s...", device.getName()));
+            outputBox.append("Connection Created!\n");
+            btnDisconnect.setText("Disconnect");
+
+            StartBluetoothServerThread t = new StartBluetoothServerThread(socket, this);
+            t.start();
         }
-        return "";
     }
+
+    @Override
+    public void receiveData(String data) {
+        outputBox.append(String.format("%s: %s\n", device.getName(), data));
+    }
+
+    public void connect() {
+        connectionInfo.setText(String.format("Connecting to: %s...", device.getName()));
+        CreateBluetoothSocketThread t = new CreateBluetoothSocketThread(device, this);
+        t.start();
+    }
+
+    @SuppressLint("SetTextI18n")
+    public void disconnect() {
+        if (closeSocketConnection(socket)) {
+            outputBox.append("Connection Closed!\n");
+            connectionInfo.setText(String.format("Not connected to: %s...", device.getName()));
+        } else {
+            outputBox.append("Could not close connection!\n");
+        }
+        btnDisconnect.setText("Connect");
+    }
+
+
 
     //    ----------------------------------------------------------------------
     //    ---------------------- Notification Functions ------------------------
@@ -235,5 +222,6 @@ public class BluetoothActivity extends AppCompatActivity {
         // notificationId is a unique int for each notification that you must define
         notificationManager.notify(0, builder.build());// fixme change id
     }
-
 }
+
+

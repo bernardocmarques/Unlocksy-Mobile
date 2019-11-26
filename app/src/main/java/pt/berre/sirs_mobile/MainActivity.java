@@ -65,23 +65,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode != Activity.RESULT_OK) {
-            Toast.makeText(this, "error in  scanning", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (requestCode == BARCODE_READER_ACTIVITY_REQUEST && data != null) {
-            Barcode barcode = data.getParcelableExtra(BarcodeReaderActivity.KEY_CAPTURED_BARCODE);
-            Toast.makeText(this, barcode.rawValue, Toast.LENGTH_SHORT).show();
-        }
-
-    }
-
-    @Override
     protected void onDestroy() {
         Log.d(TAG, "onDestroy: called.");
         super.onDestroy();

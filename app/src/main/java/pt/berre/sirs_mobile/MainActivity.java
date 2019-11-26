@@ -51,8 +51,10 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnQRCode).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent launchIntent = BarcodeReaderActivity.getLaunchIntent(MainActivity.this, true, false);
-                startActivityForResult(launchIntent, BARCODE_READER_ACTIVITY_REQUEST);
+                startActivity(new Intent(MainActivity.this, QRCodeSelection.class));
+
+//                Intent launchIntent = BarcodeReaderActivity.getLaunchIntent(MainActivity.this, true, false);
+//                startActivityForResult(launchIntent, BARCODE_READER_ACTIVITY_REQUEST);
             }
         });
 

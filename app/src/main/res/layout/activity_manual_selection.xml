@@ -5,14 +5,20 @@
     android:orientation="vertical">
 
     <Button
-        android:id="@+id/btnQRCode"
+        android:id="@+id/btnSearch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="300dp"
-        android:text="@string/qrCodeBtn" />
+        android:layout_marginTop="20dp"
+        android:text="@string/search" />
     <Button
-        android:id="@+id/btnManually"
+        android:id="@+id/btnGet"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/manualConnectBtn" />
+        android:text="@string/get_paired" />
+
+    <ListView
+        android:id="@+id/deviceList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+    </ListView>
 </LinearLayout>

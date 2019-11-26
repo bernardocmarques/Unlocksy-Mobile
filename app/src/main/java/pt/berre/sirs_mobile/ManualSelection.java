@@ -136,17 +136,19 @@ public class ManualSelection extends AppCompatActivity {
                     Log.d(TAG, "OnItemClicked: deviceAddress = " + deviceAddress);
 
 
+                    if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
+                        //create the bond
+                        Log.d(TAG, "Trying to pair with " + deviceName);
+                        device.createBond();
+                    }
+
                     //-----------------------------------------
                     Intent intent = new Intent(getBaseContext(), BluetoothActivity.class);
                     intent.putExtra("DEVICE", device);
                     startActivity(intent);
                     //-----------------------------------------
 
-//                    if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-//                        //create the bond
-//                        Log.d(TAG, "Trying to pair with " + deviceName);
-//                        device.createBond();
-//                    }
+
 //                    Log.d(TAG, "Connecting " + deviceName);
 //                    BluetoothSocket socket = createSocket(device);
 //                    Log.d(TAG, "Socket Created");

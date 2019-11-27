@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.CountDownTimer;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.os.Bundle;
@@ -60,17 +61,17 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
             }
 
 
+            // Broadcasts when bond state changes (ie:pairing)
+            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+            registerReceiver(broadcastReceiverBondStatus, filter); //fixme check if necessary
+
+
             device = getIntent().getParcelableExtra("DEVICE");
             String deviceName = device.getName();
 
-            if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-                //create the bond
-                Log.d(TAG, "Trying to pair with " + deviceName);
-                device.createBond();
-                Log.d(TAG, "Bonded to " + deviceName);
 
-            }
             connect();
+
         }
 
 
@@ -78,12 +79,12 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
             String textToSend = sendBox.getText().toString();
 
             if (socket == null || !socket.isConnected()) {
-                outputBox.append("Error sending text! Socket not connected!");
+                outputBox.append("Error sending text! Socket not connected!\n");
                 return;
             }
 
             if (!textToSend.equals("")) {
-                if (sendStringThroughSocket(socket, textToSend)){
+                if (sendStringThroughSocket(textToSend)){
                     outputBox.append(String.format("Me: %s\n", textToSend));
                 } else {
                     outputBox.append("Error sending text!");
@@ -101,6 +102,16 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
                 disconnect();
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d(TAG, "onDestroy: called.");
+        super.onDestroy();
+
+        // Don't forget to unregister the receivers.
+        unregisterReceiver(broadcastReceiverOnOff);
+        unregisterReceiver(broadcastReceiverBondStatus);
     }
 
 
@@ -137,13 +148,48 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
         }
     };
 
+    // Broadcast receiver that detects bond state changes (pairing status changes)
+    private final BroadcastReceiver broadcastReceiverBondStatus = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            assert action != null;
+            if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+
+                //3cases
+                //case 1: bonded already
+                if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+                    Log.d(TAG, "BroadcastReceiver: BOND_BONDED.");
+                }
+
+                //case 2: creating a bond
+                if (device.getBondState() == BluetoothDevice.BOND_BONDING) {
+                    Log.d(TAG, "BroadcastReceiver: BOND_BONDING.");
+
+                }
+
+                //case 3: breaking a bond
+                if (device.getBondState() == BluetoothDevice.BOND_NONE) {
+                    Log.d(TAG, "BroadcastReceiver: BOND_NONE.");
+
+                }
+            }
+        }
+    };
+
 
     //    ----------------------------------------------------------------------
     //    ------------------------ Bluetooth Functions -------------------------
     //    ----------------------------------------------------------------------
 
 
-    boolean closeSocketConnection(BluetoothSocket socket) {
+    void bond() {
+        Log.d(TAG, "Trying to pair with " + device.getName());
+        device.createBond();
+        Log.d(TAG, "Bonded to " + device.getName());
+    }
+
+    boolean closeSocketConnection() {
         try {
             socket.close();
             return true;
@@ -153,7 +199,7 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
         }
     }
 
-    boolean sendStringThroughSocket(BluetoothSocket socket, String string) {
+    boolean sendStringThroughSocket(String string) {
         try {
             socket.getOutputStream().write(string.getBytes());
             return true;
@@ -168,14 +214,15 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
     public void connectionHandler(BluetoothSocket s) {
         this.socket = s;
         if (s==null) {
-            outputBox.append("Error connecting to device!");
             connectionInfo.setText(String.format("Not connected to: %s...", device.getName()));
+            outputBox.append("Error connecting to device!\n");
+            btnDisconnect.setText("Connect");
         } else {
             connectionInfo.setText(String.format("Connected to: %s...", device.getName()));
             outputBox.append("Connection Created!\n");
             btnDisconnect.setText("Disconnect");
 
-            StartBluetoothServerThread t = new StartBluetoothServerThread(socket, this);
+            StartBluetoothServerThread t = new StartBluetoothServerThread(socket, this);  //fixme close this
             t.start();
         }
     }
@@ -193,7 +240,7 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
     @SuppressLint("SetTextI18n")
     public void disconnect() {
-        if (closeSocketConnection(socket)) {
+        if (closeSocketConnection()) {
             outputBox.append("Connection Closed!\n");
             connectionInfo.setText(String.format("Not connected to: %s...", device.getName()));
         } else {

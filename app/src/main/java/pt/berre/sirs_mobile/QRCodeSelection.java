@@ -67,13 +67,17 @@ public class QRCodeSelection extends AppCompatActivity {
             Barcode barcode = data.getParcelableExtra(BarcodeReaderActivity.KEY_CAPTURED_BARCODE);
             Toast.makeText(this, barcode.rawValue, Toast.LENGTH_LONG).show();
 
+            try {
+                BluetoothDevice device = bAdapter.getRemoteDevice(barcode.rawValue);
+
+                Intent intent = new Intent(getBaseContext(), BluetoothActivity.class);
+                intent.putExtra("DEVICE", device);
+                startActivity(intent);
+            } catch (IllegalArgumentException e) {
+                Toast.makeText(this, "Invalid QR code. Try again.", Toast.LENGTH_SHORT).show();
+            }
 
 
-            BluetoothDevice device = bAdapter.getRemoteDevice(barcode.rawValue);
-
-            Intent intent = new Intent(getBaseContext(), BluetoothActivity.class);
-            intent.putExtra("DEVICE", device);
-            startActivity(intent);
 
         }
 

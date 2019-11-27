@@ -13,9 +13,9 @@ class CreateBluetoothSocketThread extends Thread {
     private static final String TAG = "myTag";
 
 
-    BluetoothDevice device;
-    BluetoothSocket socket = null;
-    AppCompatActivity activity;
+    private BluetoothDevice device;
+    private BluetoothSocket socket = null;
+    private AppCompatActivity activity;
 
 
 

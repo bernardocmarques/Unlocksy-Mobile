@@ -99,64 +99,33 @@ public class ManualSelection extends AppCompatActivity {
 
 
             // Set listener for get paired button
-            btnGet.setOnClickListener(new View.OnClickListener() {
-                @SuppressLint("SetTextI18n")
-                @Override
-                public void onClick(View v) {
-                    devices.clear();
+            btnGet.setOnClickListener(v -> {
+                devices.clear();
+                aAdapter.notifyDataSetChanged();
+                bAdapter.cancelDiscovery();
+
+                Set<BluetoothDevice> pairedDevices = bAdapter.getBondedDevices();
+
+                if (pairedDevices.size() > 0) {
+                    devices.addAll(pairedDevices);
                     aAdapter.notifyDataSetChanged();
-                    bAdapter.cancelDiscovery();
-
-                    Set<BluetoothDevice> pairedDevices = bAdapter.getBondedDevices();
-
-                    if (pairedDevices.size() > 0) {
-                        devices.addAll(pairedDevices);
-                        aAdapter.notifyDataSetChanged();
-                    }
                 }
             });
 
 
-            // Broadcasts when bond state changes (ie:pairing)
-            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-            registerReceiver(broadcastReceiverBondStatus, filter);
-
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    bAdapter.cancelDiscovery();
-
-                    BluetoothDevice device = devices.get(position);
-
-                    Log.d(TAG, "OnItemClicked: A device was clicked.");
-                    String deviceName = device.getName();
-                    String deviceAddress = device.getAddress();
-
-                    Log.d(TAG, "OnItemClicked: deviceName = " + deviceName);
-                    Log.d(TAG, "OnItemClicked: deviceAddress = " + deviceAddress);
 
 
-                    if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-                        //create the bond
-                        Log.d(TAG, "Trying to pair with " + deviceName);
-                        device.createBond();
-                    }
+            listView.setOnItemClickListener((parent, view, position, id) -> {
+                bAdapter.cancelDiscovery();
 
-                    //-----------------------------------------
-                    Intent intent = new Intent(getBaseContext(), BluetoothActivity.class);
-                    intent.putExtra("DEVICE", device);
-                    startActivity(intent);
-                    //-----------------------------------------
+                BluetoothDevice device = devices.get(position);
 
+                //-----------------------------------------
+                Intent intent = new Intent(getBaseContext(), BluetoothActivity.class);
+                intent.putExtra("DEVICE", device);
+                startActivity(intent);
+                //-----------------------------------------
 
-//                    Log.d(TAG, "Connecting " + deviceName);
-//                    BluetoothSocket socket = createSocket(device);
-//                    Log.d(TAG, "Socket Created");
-//                    sendStringThroughSocket(socket, "Sup");
-//                    showNotification("Recivied:", readStringFromSocket(socket));
-//                    closeSocketConnection(socket);
-//                    Log.d(TAG, "here");
-                }
             });
         }
     }
@@ -170,7 +139,6 @@ public class ManualSelection extends AppCompatActivity {
         // Don't forget to unregister the receivers.
         unregisterReceiver(broadcastReceiverOnOff);
         unregisterReceiver(broadcastReceiverFound);
-        unregisterReceiver(broadcastReceiverBondStatus);
     }
 
 
@@ -222,36 +190,6 @@ public class ManualSelection extends AppCompatActivity {
 
             } else if (action.equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)) {
                 btnSearch.setText("Search");
-            }
-        }
-    };
-
-
-    // Broadcast receiver that detects bond state changes (pairing status changes)
-    private final BroadcastReceiver broadcastReceiverBondStatus = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            assert action != null;
-            if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-
-                //3cases
-                //case 1: bonded already
-                if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_BONDED.");
-                }
-
-                //case 2: creating a bond
-                if (device.getBondState() == BluetoothDevice.BOND_BONDING) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_BONDING.");
-
-                }
-
-                //case 3: breaking a bond
-                if (device.getBondState() == BluetoothDevice.BOND_NONE) {
-                    Log.d(TAG, "BroadcastReceiver: BOND_NONE.");
-
-                }
             }
         }
     };

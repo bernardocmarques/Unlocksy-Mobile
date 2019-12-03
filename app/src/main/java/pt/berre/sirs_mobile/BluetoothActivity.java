@@ -8,7 +8,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.CountDownTimer;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.os.Bundle;
@@ -34,6 +33,11 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
     private BluetoothSocket socket;
     private BluetoothDevice device;
+    private String serverPublicKeyBase64;
+
+
+    private AESUtil aesUtil = new AESUtil(256);
+    private RSAUtil rsaUtil = new RSAUtil();
 
 
 
@@ -67,6 +71,8 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
 
             device = getIntent().getParcelableExtra("DEVICE");
+            serverPublicKeyBase64 = getIntent().getStringExtra("PUBKEY");
+
             String deviceName = device.getName();
 
 
@@ -182,13 +188,6 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
     //    ------------------------ Bluetooth Functions -------------------------
     //    ----------------------------------------------------------------------
 
-
-    void bond() {
-        Log.d(TAG, "Trying to pair with " + device.getName());
-        device.createBond();
-        Log.d(TAG, "Bonded to " + device.getName());
-    }
-
     boolean closeSocketConnection() {
         try {
             socket.close();
@@ -201,11 +200,23 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
     boolean sendStringThroughSocket(String string) {
         try {
-            socket.getOutputStream().write(string.getBytes());
+            String encryptionResult = aesUtil.encrypt(string);
+
+            socket.getOutputStream().write(encryptionResult.getBytes());
+
             return true;
         } catch (IOException e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    void sendKeyThroughSocketRSA(String key) {
+        try {
+            String keyEncrypted = rsaUtil.encrypt(key, serverPublicKeyBase64);
+            socket.getOutputStream().write(keyEncrypted.getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -222,6 +233,9 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
             outputBox.append("Connection Created!\n");
             btnDisconnect.setText("Disconnect");
 
+            String key = aesUtil.generateNewSessionKey();
+            sendKeyThroughSocketRSA(key);
+
             StartBluetoothServerThread t = new StartBluetoothServerThread(socket, this);  //fixme close this
             t.start();
         }
@@ -229,6 +243,10 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
     @Override
     public void receiveData(String data) {
+        String[] parsedData = data.split(" ");
+        String encrypedData = parsedData[0];
+        String iv = parsedData[1];
+        data = aesUtil.decrypt(encrypedData, iv);
         outputBox.append(String.format("%s: %s\n", device.getName(), data));
     }
 

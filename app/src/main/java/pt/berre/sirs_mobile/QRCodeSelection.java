@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Debug;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -20,6 +21,7 @@ import android.widget.Toast;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.notbytes.barcode_reader.BarcodeReaderActivity;
 
+import java.io.Console;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -65,13 +67,21 @@ public class QRCodeSelection extends AppCompatActivity {
 
         if (requestCode == BARCODE_READER_ACTIVITY_REQUEST && data != null) {
             Barcode barcode = data.getParcelableExtra(BarcodeReaderActivity.KEY_CAPTURED_BARCODE);
-            Toast.makeText(this, barcode.rawValue, Toast.LENGTH_LONG).show();
+
+
+//            if (true) return;
+//            Toast.makeText(this, barcode.rawValue, Toast.LENGTH_LONG).show();
 
             try {
-                BluetoothDevice device = bAdapter.getRemoteDevice(barcode.rawValue);
+                String[] qrcodeData = barcode.rawValue.split("\n");
+                String deviceAddress = qrcodeData[0];
+                String pubKey = qrcodeData[1];
+
+                BluetoothDevice device = bAdapter.getRemoteDevice(deviceAddress);
 
                 Intent intent = new Intent(getBaseContext(), BluetoothActivity.class);
                 intent.putExtra("DEVICE", device);
+                intent.putExtra("PUBKEY", pubKey);
                 startActivity(intent);
             } catch (IllegalArgumentException e) {
                 Toast.makeText(this, "Invalid QR code. Try again.", Toast.LENGTH_SHORT).show();

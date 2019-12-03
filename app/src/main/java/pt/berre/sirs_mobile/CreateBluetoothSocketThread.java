@@ -48,6 +48,6 @@ class CreateBluetoothSocketThread extends Thread {
             }
         }
 
-        ((BluetoothActivity) activity).connectionHandler(socket);
+        activity.runOnUiThread(() -> ((BluetoothActivity) activity).connectionHandler(socket));
     }
 }

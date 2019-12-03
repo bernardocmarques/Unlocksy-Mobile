@@ -28,10 +28,13 @@ class StartBluetoothServerThread extends Thread {
         while (!closed) {
             byte[] mmBuffer = new byte[1024];
             try {
-                int size = socket.getInputStream().read(mmBuffer);
-                ((BluetoothInterface) activity).receiveData(new String(mmBuffer, 0, size));
+                if (socket!=null && socket.isConnected()) {
+                    int size = socket.getInputStream().read(mmBuffer);
+                    ((BluetoothInterface) activity).receiveData(new String(mmBuffer, 0, size));
+                }
             } catch (IOException e) {
                 e.printStackTrace();
+                cancel();
             }
         }
     }

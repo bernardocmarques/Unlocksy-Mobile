@@ -19,6 +19,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
 
 public class BluetoothActivity extends AppCompatActivity implements BluetoothInterface {
 
@@ -38,6 +40,8 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
     private AESUtil aesUtil = new AESUtil(256);
     private RSAUtil rsaUtil = new RSAUtil();
+
+    private ArrayList<String> nonces = new ArrayList<String>();
 
 
 
@@ -72,10 +76,6 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
             device = getIntent().getParcelableExtra("DEVICE");
             serverPublicKeyBase64 = getIntent().getStringExtra("PUBKEY");
-
-            String deviceName = device.getName();
-
-
             connect();
 
         }
@@ -86,6 +86,7 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
             if (socket == null || !socket.isConnected()) {
                 outputBox.append("Error sending text! Socket not connected!\n");
+                disconnect();
                 return;
             }
 
@@ -93,7 +94,8 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
                 if (sendStringThroughSocket(textToSend)){
                     outputBox.append(String.format("Me: %s\n", textToSend));
                 } else {
-                    outputBox.append("Error sending text!");
+                    outputBox.append("Error sending text!\n");
+                    disconnect();
                 }
             }
 
@@ -113,6 +115,7 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
     @Override
     protected void onDestroy() {
         Log.d(TAG, "onDestroy: called.");
+        disconnect();
         super.onDestroy();
 
         // Don't forget to unregister the receivers.
@@ -198,9 +201,12 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
         }
     }
 
+
+
     boolean sendStringThroughSocket(String string) {
         try {
-            String encryptionResult = aesUtil.encrypt(string);
+            BluetoothMessage message = new BluetoothMessage(string);
+            String encryptionResult = aesUtil.encrypt(message.toString());
 
             socket.getOutputStream().write(encryptionResult.getBytes());
 
@@ -224,11 +230,7 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
     @Override
     public void connectionHandler(BluetoothSocket s) {
         this.socket = s;
-        if (s==null) {
-            connectionInfo.setText(String.format("Not connected to: %s...", device.getName()));
-            outputBox.append("Error connecting to device!\n");
-            btnDisconnect.setText("Connect");
-        } else {
+        if (s!=null && s.isConnected()) {
             connectionInfo.setText(String.format("Connected to: %s...", device.getName()));
             outputBox.append("Connection Created!\n");
             btnDisconnect.setText("Disconnect");
@@ -238,6 +240,40 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
             StartBluetoothServerThread t = new StartBluetoothServerThread(socket, this);  //fixme close this
             t.start();
+        } else {
+            connectionInfo.setText(String.format("Not connected to: %s...", device.getName()));
+            outputBox.append("Error connecting to device!\n");
+            btnDisconnect.setText("Connect");
+        }
+    }
+
+    private String validateBluetoothMessage(String data) {
+        BluetoothMessage message;
+        try {
+            String[] dataSplited = data.split(",");
+            String msg = dataSplited[0];
+            String nonce = dataSplited[1];
+            long t1 = Long.parseLong(dataSplited[2]);
+            long t2 = Long.parseLong(dataSplited[3]);
+            message = new BluetoothMessage(msg, nonce, t1, t2);
+        } catch (Exception e){
+            outputBox.append("erro creating\n");
+            return null;
+        }
+
+        if (nonces.contains(message.nonce)) {
+            outputBox.append("erro nonce\n");
+            return null;
+        } else {
+            nonces.add(message.nonce);
+            Date now = new Date();
+            outputBox.append("checking time\n");
+            outputBox.append(message.t1.before(now) && message.t2.after(now) ? "true\n" : "false\n");
+            outputBox.append(message.t1 + "\n");
+            outputBox.append(now + "\n");
+            outputBox.append(message.t2 + "\n");
+
+            return message.t1.before(now) && message.t2.after(now) ? message.message : null;
         }
     }
 
@@ -246,8 +282,14 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
         String[] parsedData = data.split(" ");
         String encrypedData = parsedData[0];
         String iv = parsedData[1];
-        data = aesUtil.decrypt(encrypedData, iv);
-        outputBox.append(String.format("%s: %s\n", device.getName(), data));
+        data = validateBluetoothMessage(aesUtil.decrypt(encrypedData, iv));
+
+        if (data==null) {
+            outputBox.append("Invalid Message\n");
+        } else {
+            outputBox.append(String.format("%s: %s\n", device.getName(), data));
+        }
+
     }
 
     public void connect() {

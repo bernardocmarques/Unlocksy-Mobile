@@ -9,4 +9,7 @@ interface BluetoothInterface {
 
     void receiveData(String data);
 
+    void disconnect();
+
+    void connect();
 }

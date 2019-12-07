@@ -34,13 +34,10 @@ class StartBluetoothServerThread extends Thread {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                cancel();
+                ((BluetoothInterface) activity).disconnect();
+                this.closed = true;
             }
         }
-    }
-
-    public void cancel() {
-        this.closed = true;
     }
 
 }

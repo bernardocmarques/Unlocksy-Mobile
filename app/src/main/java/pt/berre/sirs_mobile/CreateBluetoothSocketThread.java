@@ -1,5 +1,6 @@
 package pt.berre.sirs_mobile;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.support.v7.app.AppCompatActivity;
@@ -15,12 +16,14 @@ class CreateBluetoothSocketThread extends Thread {
 
     private BluetoothDevice device;
     private BluetoothSocket socket = null;
-    private AppCompatActivity activity;
+    private BluetoothInterface btInterface;
+    private  AppCompatActivity activity;
 
 
 
-    CreateBluetoothSocketThread(BluetoothDevice device, AppCompatActivity activity) {
+    CreateBluetoothSocketThread(BluetoothDevice device, BluetoothInterface btInterface, AppCompatActivity activity) {
         this.device = device;
+        this.btInterface = btInterface;
         this.activity = activity;
     }
 
@@ -48,6 +51,7 @@ class CreateBluetoothSocketThread extends Thread {
             }
         }
 
-        activity.runOnUiThread(() -> ((BluetoothActivity) activity).connectionHandler(socket));
+//        btInterface.connectionCreatedHandler(socket);
+        activity.runOnUiThread(() -> btInterface.connectionCreatedHandler(socket));
     }
 }

@@ -5,9 +5,15 @@ import android.bluetooth.BluetoothSocket;
 
 interface BluetoothInterface {
 
-    void connectionHandler(BluetoothSocket s);
+    void connectionCreatedHandler(BluetoothSocket s);
 
     void receiveData(String data);
+
+    boolean closeSocketConnection();
+
+    boolean sendStringThroughSocket(String string);
+
+    void sendKeyThroughSocketRSA(String key);
 
     void disconnect();
 

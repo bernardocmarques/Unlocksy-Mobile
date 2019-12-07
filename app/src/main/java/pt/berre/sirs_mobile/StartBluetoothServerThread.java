@@ -13,14 +13,14 @@ class StartBluetoothServerThread extends Thread {
     private static final String TAG = "myTag";
 
     private BluetoothSocket socket;
-    private AppCompatActivity activity;
+    private BluetoothInterface btInterface;
     private boolean closed = false;
 
 
 
-    StartBluetoothServerThread(BluetoothSocket socket, AppCompatActivity activity) {
+    StartBluetoothServerThread(BluetoothSocket socket, BluetoothInterface btInterface) {
         this.socket = socket;
-        this.activity = activity;
+        this.btInterface = btInterface;
     }
 
     @Override
@@ -30,11 +30,11 @@ class StartBluetoothServerThread extends Thread {
             try {
                 if (socket!=null && socket.isConnected()) {
                     int size = socket.getInputStream().read(mmBuffer);
-                    ((BluetoothInterface) activity).receiveData(new String(mmBuffer, 0, size));
+                    btInterface.receiveData(new String(mmBuffer, 0, size));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                ((BluetoothInterface) activity).disconnect();
+                btInterface.disconnect();
                 this.closed = true;
             }
         }

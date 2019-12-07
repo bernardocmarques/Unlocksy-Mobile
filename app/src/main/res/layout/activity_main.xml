@@ -15,4 +15,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/manualConnectBtn" />
+    <Button
+        android:id="@+id/btnNew"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="New" />
 </LinearLayout>

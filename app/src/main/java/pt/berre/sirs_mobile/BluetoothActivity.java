@@ -76,6 +76,7 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
             device = getIntent().getParcelableExtra("DEVICE");
             serverPublicKeyBase64 = getIntent().getStringExtra("PUBKEY");
+
             connect();
 
         }
@@ -115,7 +116,6 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
     @Override
     protected void onDestroy() {
         Log.d(TAG, "onDestroy: called.");
-        disconnect();
         super.onDestroy();
 
         // Don't forget to unregister the receivers.
@@ -191,7 +191,7 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
     //    ------------------------ Bluetooth Functions -------------------------
     //    ----------------------------------------------------------------------
 
-    boolean closeSocketConnection() {
+    public boolean closeSocketConnection() {
         try {
             socket.close();
             return true;
@@ -201,9 +201,7 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
         }
     }
 
-
-
-    boolean sendStringThroughSocket(String string) {
+    public boolean sendStringThroughSocket(String string) {
         try {
             BluetoothMessage message = new BluetoothMessage(string);
             String encryptionResult = aesUtil.encrypt(message.toString());
@@ -217,7 +215,7 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
         }
     }
 
-    void sendKeyThroughSocketRSA(String key) {
+    public void sendKeyThroughSocketRSA(String key) {
         try {
             String keyEncrypted = rsaUtil.encrypt(key, serverPublicKeyBase64);
             socket.getOutputStream().write(keyEncrypted.getBytes());
@@ -228,7 +226,7 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
     @SuppressLint("SetTextI18n")
     @Override
-    public void connectionHandler(BluetoothSocket s) {
+    public void connectionCreatedHandler(BluetoothSocket s) {
         this.socket = s;
         if (s!=null && s.isConnected()) {
             connectionInfo.setText(String.format("Connected to: %s...", device.getName()));
@@ -294,7 +292,7 @@ public class BluetoothActivity extends AppCompatActivity implements BluetoothInt
 
     public void connect() {
         connectionInfo.setText(String.format("Connecting to: %s...", device.getName()));
-        CreateBluetoothSocketThread t = new CreateBluetoothSocketThread(device, this);
+        CreateBluetoothSocketThread t = new CreateBluetoothSocketThread(device, this, this);
         t.start();
     }
 

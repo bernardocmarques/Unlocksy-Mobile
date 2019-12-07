@@ -7,7 +7,7 @@
     <uses-feature android:name="android.hardware.camera" />
 
     <application>
-        <activity android:name=".BarcodeReaderActivity"></activity>
+        <activity android:name=".BarcodeReaderActivity" />
     </application>
 
 </manifest>

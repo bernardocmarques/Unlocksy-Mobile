@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
 //                startActivityForResult(launchIntent, BARCODE_READER_ACTIVITY_REQUEST);
             }
         });
+
+        findViewById(R.id.btnNew).setOnClickListener(v -> startActivity(new Intent(MainActivity.this, MainScreen.class)));
 
 
 

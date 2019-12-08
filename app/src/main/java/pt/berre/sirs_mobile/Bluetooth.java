@@ -60,7 +60,7 @@ public class Bluetooth implements BluetoothInterface {
         } else {
             nonceList.add(message.nonce);
             Date now = new Date();
-            Log.d(TAG, "validateBluetoothMessage: Checking Times");
+//            Log.d(TAG, "validateBluetoothMessage: Checking Times");
             return message.t1.before(now) && message.t2.after(now) ? message.message : null;
         }
     }

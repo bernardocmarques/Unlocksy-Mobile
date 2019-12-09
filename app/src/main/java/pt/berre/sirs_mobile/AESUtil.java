@@ -35,6 +35,10 @@ class AESUtil {
 
     }
 
+    String generateNewKeyChainKey() {
+        return Base64.encodeToString(keygen.generateKey().getEncoded(), Base64.NO_WRAP);
+    }
+
     String generateNewSessionKey() {
         key = keygen.generateKey();
         return Base64.encodeToString(key.getEncoded(), Base64.NO_WRAP);

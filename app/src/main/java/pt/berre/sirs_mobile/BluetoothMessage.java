@@ -36,8 +36,6 @@ public class BluetoothMessage {
         this.nonce = nonce;
         this.t1 = new Date(t1);
         this.t2 = new Date(t2);
-        Log.d("myTag", "BluetoothMessage: " + this.t1 + " " + t1);
-        Log.d("myTag", "BluetoothMessage: " + this.t2 + " " + t2);
     }
 
 

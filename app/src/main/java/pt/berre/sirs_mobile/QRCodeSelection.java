@@ -42,7 +42,6 @@ public class QRCodeSelection extends AppCompatActivity {
 
         btnScan = (Button) findViewById(R.id.btnScan);
 
-
         btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

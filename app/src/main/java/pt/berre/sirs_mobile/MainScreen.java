@@ -214,10 +214,11 @@ public class MainScreen extends AppCompatActivity {
                 String[] qrcodeData = barcode.rawValue.split("\n");
                 String deviceAddress = qrcodeData[0];
                 String pubKey = qrcodeData[1];
+                String mode = qrcodeData[2];
 
                 BluetoothDevice device = bAdapter.getRemoteDevice(deviceAddress);
 
-                bt = new Bluetooth(device, pubKey, this);
+                bt = new Bluetooth(device, pubKey, mode,this);
 
 
             } catch (IllegalArgumentException e) {

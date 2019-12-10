@@ -18,6 +18,7 @@ public class Bluetooth implements BluetoothInterface {
     private BluetoothDevice device;
     private String serverPublicKeyBase64;
     private MainScreen activity;
+    private String mode;
 
     private BluetoothSocket socket;
 
@@ -26,10 +27,16 @@ public class Bluetooth implements BluetoothInterface {
     private ArrayList<String> nonceList = new ArrayList<>();
 
 
-    Bluetooth(BluetoothDevice device, String serverPublicKeyBase64, MainScreen activity) {
+    Bluetooth(BluetoothDevice device, String serverPublicKeyBase64, String mode, MainScreen activity) {
         this.device = device;
         this.serverPublicKeyBase64 = serverPublicKeyBase64;
         this.activity = activity;
+        this.mode = mode.toLowerCase();
+
+        Log.d(TAG, "Bluetooth: " + mode);
+
+        activity.runOnUiThread(() -> Toast.makeText(activity.getApplicationContext(), mode, Toast.LENGTH_SHORT).show());
+
 
         this.aesUtil = new AESUtil(256);
         this.rsaUtil = new RSAUtil();
@@ -76,11 +83,22 @@ public class Bluetooth implements BluetoothInterface {
         if (s!=null && s.isConnected()) {
             // TODO Connected
 
-            String key = aesUtil.generateNewSessionKey();
-            sendKeyThroughSocketRSA(key);
+            switch (this.mode) {
+                case "share":
+                    String KCkey = aesUtil.generateNewKeyChainKey();
+                    sendKeyThroughSocketRSA(KCkey);
 
-            StartBluetoothServerThread t = new StartBluetoothServerThread(socket, this);
-            t.start();
+                    disconnect();
+                    break;
+                case "normal":
+                default:
+                    String key = aesUtil.generateNewSessionKey();
+                    sendKeyThroughSocketRSA(key);
+
+                    StartBluetoothServerThread t = new StartBluetoothServerThread(socket, this);
+                    t.start();
+                    break;
+            }
         } else {
             // TODO Not Connected
             activity.disconnect();

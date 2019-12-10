@@ -18,10 +18,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".MainScreen" />
-        <activity android:name=".BluetoothActivity" />
-        <activity android:name=".QRCodeSelection" />
-        <activity android:name=".ManualSelection" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

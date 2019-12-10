@@ -10,14 +10,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class Bluetooth implements BluetoothInterface {
 
+
+public class Bluetooth implements BluetoothInterface {
 
     private static final String TAG = "myTagBT";
 
     private BluetoothDevice device;
     private String serverPublicKeyBase64;
-    private MainScreen activity;
+    private MainActivity activity;
     private String mode;
 
     private BluetoothSocket socket;
@@ -27,7 +28,7 @@ public class Bluetooth implements BluetoothInterface {
     private ArrayList<String> nonceList = new ArrayList<>();
 
 
-    Bluetooth(BluetoothDevice device, String serverPublicKeyBase64, String mode, MainScreen activity) {
+    Bluetooth(BluetoothDevice device, String serverPublicKeyBase64, String mode, MainActivity activity) {
         this.device = device;
         this.serverPublicKeyBase64 = serverPublicKeyBase64;
         this.activity = activity;
@@ -48,6 +49,7 @@ public class Bluetooth implements BluetoothInterface {
     // ------------------------
 
     private String validateBluetoothMessage(String data) {
+        Log.d(TAG, "validateBluetoothMessage: chega");
         BluetoothMessage message;
         try {
             String[] dataSplited = data.split(",");
@@ -67,7 +69,10 @@ public class Bluetooth implements BluetoothInterface {
         } else {
             nonceList.add(message.nonce);
             Date now = new Date();
-//            Log.d(TAG, "validateBluetoothMessage: Checking Times");
+            Log.d(TAG, "validateBluetoothMessage: Checking Times");
+            Log.d(TAG, message.t1.toString());
+            Log.d(TAG, now.toString());
+            Log.d(TAG, message.t2.toString());
             return message.t1.before(now) && message.t2.after(now) ? message.message : null;
         }
     }

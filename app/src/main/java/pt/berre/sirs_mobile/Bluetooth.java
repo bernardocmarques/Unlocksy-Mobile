@@ -90,7 +90,7 @@ public class Bluetooth implements BluetoothInterface {
 
             switch (this.mode) {
                 case "share":
-                    String KCkey = aesUtil.generateNewKeyChainKey();
+                    String KCkey = activity.getOrGenerateKeychainKey();
                     sendKeyThroughSocketRSA(KCkey);
 
                     disconnect();

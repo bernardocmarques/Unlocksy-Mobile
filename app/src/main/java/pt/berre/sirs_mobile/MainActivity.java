@@ -172,6 +172,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public String getOrGenerateKeychainKey() {
+        String keychainKey = getKeychainKey();
+
+        if (keychainKey == null) {
+            keychainKey = aesUtil.generateNewKeyChainKey();
+            storeKeychainKey(keychainKey);
+        }
+        return keychainKey;
+    }
+
 
     void executeCommand(String command) {
         String[] cmdSplited = command.split(" ");
@@ -184,12 +194,8 @@ public class MainActivity extends AppCompatActivity {
                 sendCmd("SCA " + (challenge + 1));
                 break;
             case "RGK":
-                String keychainKey = getKeychainKey();
+                String keychainKey = getOrGenerateKeychainKey();
 
-                if (keychainKey == null) {
-                    keychainKey = aesUtil.generateNewKeyChainKey();
-                    storeKeychainKey(keychainKey);
-                }
                 sendCmd("SGK " + keychainKey);
                 break;
             case "RNK":

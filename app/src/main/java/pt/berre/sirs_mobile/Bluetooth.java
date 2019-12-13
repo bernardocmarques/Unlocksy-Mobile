@@ -2,11 +2,13 @@ package pt.berre.sirs_mobile;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -172,5 +174,24 @@ public class Bluetooth implements BluetoothInterface {
             activity.runOnUiThread(() -> Toast.makeText(activity.getApplicationContext(), "Error Closing Socket", Toast.LENGTH_SHORT).show());
         }
         activity.disconnect();
+    }
+
+    String getServerID() {
+        return hashSha256(serverPublicKeyBase64);
+    }
+
+    private String hashSha256(String stringB64) {
+
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            byte[] srtringHashed = digest.digest(Base64.decode(stringB64, Base64.NO_WRAP));
+
+            return Base64.encodeToString(srtringHashed, Base64.NO_WRAP);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 }

@@ -1,30 +1,19 @@
 package pt.berre.sirs_mobile;
 
 
-import android.Manifest;
 import android.app.Activity;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -48,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     final String AndroidKeyStore = "AndroidKeyStore";
     final String AES_MODE_KEYSTORE = "AES/GCM/NoPadding";
-    String KEYCHAINKEK_ALIAS = "testing KeychainKEK";
+    String KEYCHAIN_KEK_ALIAS = "KeychainKEK";
 
 
     private BluetoothAdapter bAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -101,10 +90,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private String getKeychainKey() {
+    private String getKeychainKey(String serverID) {
+
+        String keychainKeySharedPrefID = "keychainKey" + serverID;
+        String ivSharedPrefID = "keychainKeyIV" + serverID;
+
+
         SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
-        String keychainKeyEncryptedBase64 = sharedPref.getString("keychainKey",null);
-        String IVBase64 = sharedPref.getString("keychainKeyIV",null);
+        String keychainKeyEncryptedBase64 = sharedPref.getString(keychainKeySharedPrefID,null);
+        String IVBase64 = sharedPref.getString(ivSharedPrefID,null);
 
         if (keychainKeyEncryptedBase64==null || IVBase64==null){
             return null;
@@ -115,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         try {
-            Key KeychainKEK = keyStore.getKey(KEYCHAINKEK_ALIAS, null);
+            Key KeychainKEK = keyStore.getKey(KEYCHAIN_KEK_ALIAS, null);
 
             Cipher c = Cipher.getInstance(AES_MODE_KEYSTORE);
             c.init(Cipher.DECRYPT_MODE, KeychainKEK, new GCMParameterSpec(128, IV));
@@ -129,17 +123,21 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
-    private void storeKeychainKey(String keychainKeyBase64) {
+    private void storeKeychainKey(String keychainKeyBase64, String serverID) {
         byte[] keychainKey =  Base64.decode(keychainKeyBase64, Base64.DEFAULT);
 
+        String keychainKeySharedPrefID = "keychainKey" + serverID;
+        String ivSharedPrefID = "keychainKeyIV" + serverID;
+        String keychainID = KEYCHAIN_KEK_ALIAS + serverID;
 
         try {
-            if (!keyStore.containsAlias(KEYCHAINKEK_ALIAS)) {
+            if (!keyStore.containsAlias(keychainID)) {
                 KeyGenerator keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, AndroidKeyStore);
                 keyGenerator.init(
-                        new KeyGenParameterSpec.Builder(KEYCHAINKEK_ALIAS,
+                        new KeyGenParameterSpec.Builder(keychainID,
                                 KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
-                                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)                   .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                                 .setRandomizedEncryptionRequired(false)
                                 .build());
                 keyGenerator.generateKey();
@@ -149,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         try {
-            Key KeychainKEK = keyStore.getKey(KEYCHAINKEK_ALIAS, null);
+            Key KeychainKEK = keyStore.getKey(keychainID, null);
 
             Cipher c = Cipher.getInstance(AES_MODE_KEYSTORE);
 
@@ -164,8 +162,8 @@ public class MainActivity extends AppCompatActivity {
 
             SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPref.edit();
-            editor.putString("keychainKey", keychainKeyEncryptedBase64);
-            editor.putString("keychainKeyIV", Base64.encodeToString(IV, Base64.DEFAULT));
+            editor.putString(keychainKeySharedPrefID, keychainKeyEncryptedBase64);
+            editor.putString(ivSharedPrefID, Base64.encodeToString(IV, Base64.DEFAULT));
             editor.apply();
         } catch (Exception e) {
             Log.e(TAG, "storeKeychainKey: Error encrypting KeychainKEK", e);
@@ -173,11 +171,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public String getOrGenerateKeychainKey() {
-        String keychainKey = getKeychainKey();
+        String serverID = bt.getServerID();
+        String keychainKey = getKeychainKey(serverID);
 
         if (keychainKey == null) {
             keychainKey = aesUtil.generateNewKeyChainKey();
-            storeKeychainKey(keychainKey);
+            storeKeychainKey(keychainKey, serverID);
         }
         return keychainKey;
     }
@@ -199,8 +198,9 @@ public class MainActivity extends AppCompatActivity {
                 sendCmd("SGK " + keychainKey);
                 break;
             case "RNK":
+                String serverID = bt.getServerID();
                 keychainKey = aesUtil.generateNewKeyChainKey();
-                storeKeychainKey(keychainKey);
+                storeKeychainKey(keychainKey, serverID);
 
                 sendCmd("SNK " + keychainKey);
                 break;

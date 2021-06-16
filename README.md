@@ -1,15 +1,11 @@
 ![](./readme/imgs/banner.png)
 
 <p align="center">
-  <a href="https://github.com/bernardocmarques/Unlocksy-Mobile/releases/" target="_blank">
-    <img alt="GitHub release" src="https://img.shields.io/github/v/release/bernardocmarques/Unlocksy-Mobile?include_prereleases&style=flat-square">
-  </a>
 
   <a href="https://github.com/bernardocmarques/Unlocksy-Mobile/commits/master" target="_blank">
     <img src="https://img.shields.io/github/last-commit/bernardocmarques/Unlocksy-Mobile?style=flat-square" alt="GitHub last commit">
   </a>
 
-  </br>
 
   <a href="https://github.com/bernardocmarques/Unlocksy-Mobile/issues" target="_blank">
     <img src="https://img.shields.io/github/issues/bernardocmarques/Unlocksy-Mobile?style=flat-square&color=red" alt="GitHub issues">
@@ -17,14 +13,6 @@
 
   <a href="https://github.com/bernardocmarques/Unlocksy-Mobile/pulls" target="_blank">
     <img src="https://img.shields.io/github/issues-pr/bernardocmarques/Unlocksy-Mobile?style=flat-square&color=blue" alt="GitHub pull requests">
-  </a>
-
-  <a href="https://github.com/bernardocmarques/Unlocksy-Mobile#contribute" target="_blank">
-    <img alt="Contributors" src="https://img.shields.io/badge/dynamic/json?color=orange&style=flat-square&label=all%20contributors&query=%24.contributors.length&url=https://raw.githubusercontent.com/bernardocmarques/Unlocksy-Mobile/master/.all-contributorsrc">
-  </a>
-
-  <a href="https://github.com/bernardocmarques/Unlocksy-Mobile/blob/master/LICENSE" target="_blank">
-    <img alt="LICENSE" src="https://img.shields.io/github/license/bernardocmarques/Unlocksy-Mobile?style=flat-square&color=yellow">
   </a>
 
 </p>
